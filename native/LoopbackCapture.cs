@@ -13,6 +13,16 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 
+/* 版本信息（写进 PE 资源，资源管理器"详细信息"里可见） */
+[assembly: System.Reflection.AssemblyTitle("dsh-spectrum-rail loopback helper")]
+[assembly: System.Reflection.AssemblyDescription("WASAPI loopback capture streamed over local HTTP for the dsh-spectrum-rail plugin.")]
+[assembly: System.Reflection.AssemblyProduct("dsh-spectrum-rail")]
+[assembly: System.Reflection.AssemblyCompany("dsh-spectrum-rail contributors")]
+[assembly: System.Reflection.AssemblyCopyright("MIT License")]
+[assembly: System.Reflection.AssemblyVersion("0.1.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("0.1.1.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("0.1.1")]
+
 class LoopbackCapture
 {
     const int CLSCTX_ALL = 0x17;
@@ -185,6 +195,12 @@ class LoopbackCapture
         CoInitializeEx(IntPtr.Zero, 0); // MTA
 
         string mode = args.Length > 0 ? args[0] : "--serve";
+
+        if (mode == "--version")
+        {
+            Console.Out.WriteLine("dsh-spectrum-rail helper 0.1.1");
+            return 0;
+        }
 
         if (mode == "--record")
         {
