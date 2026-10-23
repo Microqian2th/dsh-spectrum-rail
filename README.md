@@ -6,7 +6,7 @@
 
 | 深色主题 | 浅色主题 | 右键菜单 |
 |---|---|---|
-| ![a](docs/rail-a.png) ![b](docs/rail-b.png) | ![c](docs/rail-c.png) ![d](docs/rail-d.png) | ![menu](docs/menu.png) |
+| <img src="docs/rail-a.png" height="280" alt="dark"> <img src="docs/rail-b.png" height="280" alt="dark"> | <img src="docs/rail-c.png" height="280" alt="light"> <img src="docs/rail-d.png" height="280" alt="light"> | <img src="docs/menu.png" height="280" alt="menu"> |
 
 ## 特性
 
