@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Spectrum Rail",
+    "description": "Draws the conversation turn rail as a 42-band audio spectrum fed by a chosen input device."
+  }
+}
