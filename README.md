@@ -4,12 +4,12 @@
 
 ![效果](docs/hero.png)
 
-| 深色主题（已提亮） | 浅色主题 | 右键菜单 |
-|---|---|---|
-| <img src="docs/rail-a-bright.png" height="280" alt="dark"> <img src="docs/rail-b-bright.png" height="280" alt="dark"> | <img src="docs/rail-c.png" height="280" alt="light"> <img src="docs/rail-d.png" height="280" alt="light"> | <img src="docs/menu.png" height="280" alt="menu"> |
+| 深色主题（原图） | 深色主题（已提亮） | 浅色主题 | 右键菜单 |
+|---|---|---|---|
+| <img src="docs/rail-a.png" height="280" alt="dark raw"> <img src="docs/rail-b.png" height="280" alt="dark raw"> | <img src="docs/rail-a-bright.png" height="280" alt="dark bright"> <img src="docs/rail-b-bright.png" height="280" alt="dark bright"> | <img src="docs/rail-c.png" height="280" alt="light"> <img src="docs/rail-d.png" height="280" alt="light"> | <img src="docs/menu.png" height="280" alt="menu"> |
 
-> 深色主题的两张是同一张截图的**提亮版**（条的颜色按 2.4× 对比度放大），只为在深色页面上看清；
-> 未处理的原始截图见 [rail-a.png](docs/rail-a.png) / [rail-b.png](docs/rail-b.png)。浅色主题两张为原始截图。
+> 深色主题给了两列做对比：左边是原始截图，右边是同样两张按 2.4× 对比度提亮的版本——原始颜色本身就是很淡的灰，缩小后几乎看不清。
+> 浅色主题两张为原始截图。
 
 ## 特性
 
