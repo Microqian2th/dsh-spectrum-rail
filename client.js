@@ -35,6 +35,7 @@ window.__ModuleLoader__.load({
     var PITCH = 10;
     var BAR_MAX = 60;
     var RAIL_W = 64; // 容纳 60px 的条
+    var HIT_W = 28; // 按钮命中区，保持原生宽度
 
     var F_MIN = 40;
     var F_MAX = 16000;
@@ -77,6 +78,7 @@ window.__ModuleLoader__.load({
         denied: "无法打开音频输入（权限或设备被占用）",
         loopback: "系统音频（本机回放）",
         loopbackOff: "本机回放助手未运行，重启 DSH 后重试",
+        streamLost: "音频流中断，正在重连…",
         running: "正在采集",
         motion: "频谱：{state}",
         on: "开",
@@ -92,6 +94,7 @@ window.__ModuleLoader__.load({
         denied: "Could not open the audio input (permission or device busy)",
         loopback: "System audio (this computer)",
         loopbackOff: "The loopback helper is not running; restart DSH and try again",
+        streamLost: "Audio stream lost, reconnecting…",
         running: "Live",
         motion: "Spectrum: {state}",
         on: "on",
@@ -118,8 +121,8 @@ window.__ModuleLoader__.load({
       /* 只加宽导航条本身，保留它的滚动与定位 */
       "nav[" + RAIL_ATTR + "]{width:" + RAIL_W + "px !important}",
 
-      /* 每一条：颜色跟主题走；位置、命中区、滚动都由原生负责 */
-      "nav[" + RAIL_ATTR + "] button[data-index]{color:var(--dsw-alias-label-primary,#f5f5f5)}",
+      /* 每一条：颜色跟主题走；命中区保持原生 28px，条本身往左溢出到 60px */
+      "nav[" + RAIL_ATTR + "] button[data-index]{color:var(--dsw-alias-label-primary,#f5f5f5);left:auto !important;right:0 !important;width:" + HIT_W + "px !important}",
 
       /* 覆盖原生那根 20×2 的小条：2px 粗、最长 60px、右对齐、按音频缩放 */
       "nav[" + RAIL_ATTR + "] button[data-index]::before{",
@@ -249,6 +252,11 @@ window.__ModuleLoader__.load({
       lbRate: 48000,
       lbChannels: 2,
       lbNext: 0,
+      /* 会话计数：断流重连时用来判断"还是不是同一次会话" */
+      session: 0,
+      retry: 0,
+      frame: 0,
+      lowReady: false,
       stats: { bytes: 0, peak: 0, rate: 0, channels: 0 }
     };
 
@@ -291,6 +299,10 @@ window.__ModuleLoader__.load({
     }
 
     function stopAudio() {
+      if (audio.retry) {
+        clearTimeout(audio.retry);
+        audio.retry = 0;
+      }
       if (audio.raf) {
         cancelAnimationFrame(audio.raf);
         audio.raf = 0;
@@ -326,7 +338,31 @@ window.__ModuleLoader__.load({
       audio.binsLow = null;
       audio.tones = null;
       audio.status = "idle";
+      audio.lowReady = false;
       audio.bands = new Float32Array(CELLS);
+    }
+
+    /**
+     * 音频流意外结束（助手退出、设备被拔、麦克风被抢占）：
+     * 标记错误状态，并自动重连一次——用户不用再去菜单里点一遍。
+     */
+    function handleStreamEnd(session) {
+      if (session !== audio.session) return; // 已经是旧会话
+      if (!audio.abort && !audio.stream) return; // 用户主动停的
+
+      stopAudio();
+      audio.status = "error";
+      audio.error = "stream";
+      store.emit();
+
+      if (!motionEnabled()) return;
+      var target = audio.deviceId;
+      audio.retry = setTimeout(function () {
+        audio.retry = 0;
+        if (!motionEnabled() || audio.status === "running") return;
+        if (target === LOOPBACK_ID) startLoopback();
+        else if (target) startAudio(target);
+      }, 1500);
     }
 
     function wireAnalysers(actx, entry) {
@@ -361,6 +397,8 @@ window.__ModuleLoader__.load({
         audio.error = "unsupported";
         return;
       }
+      audio.session += 1;
+      var session = audio.session;
       audio.status = "starting";
       audio.error = "";
       try {
@@ -383,6 +421,19 @@ window.__ModuleLoader__.load({
         var stream = await navigator.mediaDevices.getUserMedia(constraints);
         var source = actx.createMediaStreamSource(stream);
         wireAnalysers(actx, source);
+
+        /* 麦克风被拔掉/被别的程序抢占时，轨道会 ended */
+        try {
+          var trackList = stream.getAudioTracks();
+          for (var t = 0; t < trackList.length; t += 1) {
+            trackList[t].addEventListener("ended", function () {
+              handleStreamEnd(session);
+            });
+          }
+        } catch (error) {
+          /* 忽略 */
+        }
+
         audio.stream = stream;
         audio.deviceId = deviceId || "";
         audio.status = "running";
@@ -444,7 +495,7 @@ window.__ModuleLoader__.load({
       return peak;
     }
 
-    async function pumpLoopback(reader, actx) {
+    async function pumpLoopback(reader, actx, session) {
       audio.reader = reader;
       var channels = audio.lbChannels;
       var rate = audio.lbRate;
@@ -474,10 +525,15 @@ window.__ModuleLoader__.load({
       } catch (error) {
         /* abort 或连接断开 */
       }
+
+      /* 正常结束或被断开：交给统一的收尾（用户主动停止时这里会直接返回） */
+      handleStreamEnd(session);
     }
 
     async function startLoopback() {
       stopAudio();
+      audio.session += 1;
+      var session = audio.session;
       audio.status = "starting";
       audio.error = "";
       store.emit();
@@ -531,7 +587,7 @@ window.__ModuleLoader__.load({
         audio.stats = { bytes: 0, peak: 0, rate: audio.lbRate, channels: audio.lbChannels };
         audio.status = "running";
         startLoop();
-        pumpLoopback(response.body.getReader(), actx);
+        pumpLoopback(response.body.getReader(), actx, session);
       } catch (error) {
         if (actx && audio.ctx !== actx) {
           try {
@@ -577,7 +633,13 @@ window.__ModuleLoader__.load({
         return;
       }
       audio.analyser.getByteFrequencyData(audio.bins);
-      if (audio.analyserLow && audio.binsLow) audio.analyserLow.getByteFrequencyData(audio.binsLow);
+
+      /* 8192 点长窗每 3 帧算一次：低频本来变化慢，省一半以上的 FFT 开销 */
+      audio.frame += 1;
+      if (audio.analyserLow && audio.binsLow && (audio.frame % 3 === 0 || !audio.lowReady)) {
+        audio.analyserLow.getByteFrequencyData(audio.binsLow);
+        audio.lowReady = true;
+      }
 
       for (var i = 0; i < CELLS; i += 1) {
         var tone = audio.tones[i];
@@ -889,7 +951,9 @@ window.__ModuleLoader__.load({
             ? t("unsupported")
             : snapshot.error === "loopback"
               ? t("loopbackOff")
-              : t("denied")
+              : snapshot.error === "stream"
+                ? t("streamLost")
+                : t("denied")
         );
       } else if (items.length === 0) {
         status = h("div", { className: "dsh-eq-note" }, t("empty"));
