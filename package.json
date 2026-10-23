@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "dsh-spectrum-rail",
   "version": "0.1.1",
   "description": "Turn the DSH conversation rail into an audio spectrum fed by system loopback or a microphone.",
