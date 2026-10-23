@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+*.raw
+*.wav
+*.out
+*.err
+.DS_Store
+Thumbs.db

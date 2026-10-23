@@ -1,0 +1,45 @@
+{
+  "name": "dsh-spectrum-rail",
+  "version": "0.1.0",
+  "description": "Turn the DSH conversation rail into an audio spectrum fed by system loopback or a microphone.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "spectrum",
+    "audio",
+    "visualizer",
+    "wasapi"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/en.json",
+    "locale/zh.json",
+    "icon.svg",
+    "native/loopback-capture.exe",
+    "native/LoopbackCapture.cs",
+    "native/build.ps1"
+  ],
+  "engines": {
+    "dsh": ">=0.2.0-0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  }
+}
