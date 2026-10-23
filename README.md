@@ -4,9 +4,9 @@
 
 ![效果](docs/hero.png)
 
-| 频谱（不同音量） | 右键菜单 |
-|---|---|
-| ![a](docs/rail-a.png) ![b](docs/rail-b.png) ![c](docs/rail-c.png) ![d](docs/rail-d.png) | ![menu](docs/menu.png) |
+| 深色主题 | 浅色主题 | 右键菜单 |
+|---|---|---|
+| ![a](docs/rail-a.png) ![b](docs/rail-b.png) | ![c](docs/rail-c.png) ![d](docs/rail-d.png) | ![menu](docs/menu.png) |
 
 ## 特性
 
